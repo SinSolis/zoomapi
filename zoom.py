@@ -37,7 +37,6 @@ def get_access_token(client_id, client_secret, account_id):
 # Get access token
 access_token = get_access_token(client_id, client_secret, account_id)
 
-
 # Function to get meeting metrics with pagination
 def get_meeting_metrics():
     url = 'https://api.zoom.us/v2/metrics/meetings'  # Define the metrics URL
@@ -52,12 +51,12 @@ def get_meeting_metrics():
         'page_size': '300'
     }
 
-    all_metrics = []
     while True:
         response = requests.get(url, headers=headers, params=params)
         if response.status_code == 200:
             data = response.json()
-            all_metrics.extend(data.get('meetings', []))
+            meetings = data.get('meetings', [])
+            print(json.dumps(meetings, indent=4))  # Print the metrics in pretty JSON format
             next_page_token = data.get('next_page_token')
             if not next_page_token:
                 break
@@ -65,9 +64,6 @@ def get_meeting_metrics():
         else:
             print(f"Failed to get meeting metrics: {response.status_code}")
             break
-    return all_metrics
 
-# Get all meeting metrics
-all_meeting_metrics = get_meeting_metrics()
-# Print the metrics in pretty JSON format
-print(json.dumps(all_meeting_metrics, indent=4))
+# Get all meeting metrics and print them
+get_meeting_metrics()
