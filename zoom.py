@@ -1,16 +1,14 @@
-import base64
-import requests
-import json
-
-# Function to get participants for a list of meeting IDs with pagination
 def get_meeting_participants(meeting_ids):
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
     
+    all_participants = []  # Initialize an empty list to store all participants
+    
     for meeting_id in meeting_ids:
         params = {
-            'page_size': '300'
+            'page_size': '300',
+            'type': 'past'
         }
         while True:
             url = f'https://api.zoom.us/v2/metrics/meetings/{meeting_id}/participants'
@@ -18,8 +16,12 @@ def get_meeting_participants(meeting_ids):
             if response.status_code == 200:
                 data = response.json()
                 participants = data.get('participants', [])
-                print(f"Participants for meeting {meeting_id}:")
-                print(json.dumps(participants, indent=4))  # Print the participants in pretty JSON format
+                for participant in participants:
+                    participant['meeting_id'] = meeting_id  # Add meeting_id to each participant
+                    # Add prefix to each field
+                    for key in list(participant.keys()):
+                        participant[f'participant_{key}'] = participant.pop(key)
+                all_participants.extend(participants)  # Add participants to the all_participants list
                 next_page_token = data.get('next_page_token')
                 if not next_page_token:
                     break
@@ -27,12 +29,5 @@ def get_meeting_participants(meeting_ids):
             else:
                 print(f"Failed to get participants for meeting {meeting_id}: {response.status_code}")
                 break
-
-# Get all meeting metrics and print them
-all_meeting_ids = get_meeting_metrics()
-
-# Get participants for all meetings
-get_meeting_participants(all_meeting_ids)
-
-# Print the list of all IDs
-print(all_meeting_ids)
+    
+    return all_participants  # Return the list of all participants
